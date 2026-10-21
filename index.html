@@ -7,9 +7,6 @@
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <style>
     body { background-color: #0f172a; color: #f8fafc; padding-bottom: 70px; }
@@ -22,10 +19,6 @@
 
     /* Product Grid - 3 Columns Always */
     .product-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 8px 10px; }
-
-    /* Admin Delete Button - Isiba igicuruzwa kitakiri ku isoko */
-    .admin-del-btn { display: none; }
-    body.admin-mode-active .admin-del-btn { display: flex; }
   </style>
 </head>
 <body id="mainBody">
@@ -95,22 +88,22 @@
 
       <div class="space-y-2 text-xs">
         <div>
-          <label class="font-bold block mb-1">Izina Ryose *</label>
+          <label class="font-bold block mb-1">Amazina Yombi (Full Name) *</label>
           <input type="text" id="custName" placeholder="Urugero: Keza Alice" class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
         </div>
         <div>
-          <label class="font-bold block mb-1">Nimero ya Telefoni *</label>
+          <label class="font-bold block mb-1">Nimero ya Telefoni (Phone) *</label>
           <input type="tel" id="custPhone" placeholder="078..." class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
         </div>
         <div>
-          <label class="font-bold block mb-1">Aho Uherereye (Location) *</label>
+          <label class="font-bold block mb-1">Aho Utuye / Aho Uherereye (Location) *</label>
           <input type="text" id="custLoc" placeholder="Kigali, Nyarugenge" class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
         </div>
       </div>
 
       <div class="mt-4">
         <button class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded font-bold text-xs flex items-center justify-center gap-2" onclick="checkoutWhatsApp()">
-          💬 Tumiza Byose kuri WhatsApp
+          💬 Ohereza Oda Direct kuri WhatsApp
         </button>
       </div>
     </div>
@@ -157,7 +150,7 @@
     <div class="bg-slate-800 p-3 rounded-lg mb-3 space-y-2 text-xs border border-slate-700">
       <div class="font-bold text-sky-400 uppercase">📢 EDIT PROMO TICKER TEXT</div>
       <input type="text" id="admTickerInput" placeholder="Amagambo araguruka hejuru..." class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
-      <button class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded font-bold" onclick="saveTickerText()">💾 Bika Amagambo (Save Ticker)</button>
+      <button class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded font-bold" onclick="saveTickerText()">💾 Bika Amagambo</button>
     </div>
 
     <!-- Edit Hero Banner -->
@@ -165,7 +158,7 @@
       <div class="font-bold text-sky-400 uppercase">🎨 EDIT HERO BANNER</div>
       <input type="text" id="admHeroTitle" placeholder="Title..." class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
       <input type="text" id="admHeroDesc" placeholder="Description..." class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
-      <button class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded font-bold" onclick="saveHeroBanner()">💾 Bika Poromosiyo (Save Hero)</button>
+      <button class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded font-bold" onclick="saveHeroBanner()">💾 Bika Poromosiyo</button>
     </div>
 
     <!-- Add New Product -->
@@ -181,8 +174,14 @@
         <option value="Drinks">Ibinyobwa</option>
         <option value="Electronics">Ikoranabuhanga</option>
       </select>
-      <input type="text" id="admProdImg" placeholder="Link y'Ifoto (Image URL)" class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
-      <button class="w-full bg-emerald-600 hover:bg-emerald-700 py-2 rounded font-bold" onclick="addNewProduct()">➕ Ongeraho Igicuruzwa (Add Product)</button>
+      <input type="text" id="admProdImg" placeholder="Link y'Ifoto (Image URL Direct Link)" class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
+      <button class="w-full bg-emerald-600 hover:bg-emerald-700 py-2 rounded font-bold" onclick="addNewProduct()">➕ Ongeraho Igicuruzwa</button>
+    </div>
+
+    <!-- ADMIN PRODUCT MANAGEMENT (Gusiba Igicuruzwa Bitiyoroheye) -->
+    <div class="bg-slate-800 p-3 rounded-lg mb-3 text-xs space-y-2 border border-slate-700">
+      <div class="font-bold text-red-400 uppercase">🗑️ MANAGE & DELETE PRODUCTS (GUSIBA IBICURUZWA)</div>
+      <div id="adminProductManageList" class="space-y-1 max-h-48 overflow-y-auto"></div>
     </div>
 
     <!-- Live Orders List -->
@@ -244,7 +243,7 @@
     let defaultProducts = [
       { id: "p1", name: "Nike Sneaker", price: 25000, stock: 5, cat: "Shoes", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300" },
       { id: "p2", name: "Smart Watch V8", price: 18000, stock: 8, cat: "Electronics", img: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300" },
-      { id: "3", name: "T-Shirt White", price: 10000, stock: 12, cat: "Clothes", img: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=300" }
+      { id: "p3", name: "T-Shirt White", price: 10000, stock: 12, cat: "Clothes", img: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=300" }
     ];
 
     let currentProducts = [];
@@ -252,7 +251,7 @@
     let clickCount = 0, clickTimer;
     let selectedRevProdId = null;
 
-    // --- INITIALIZATION ON LOAD ---
+    // --- INITIALIZATION ---
     window.onload = function() {
       setupTripleClickAdmin();
       loadAllData();
@@ -274,9 +273,9 @@
         if (clickCount === 3) {
           const pass = prompt("Injiza Password ya Admin:");
           if (pass === ADMIN_PASSWORD) {
-            document.body.classList.add("admin-mode-active");
             document.getElementById("adminModal").classList.remove("hidden");
             document.getElementById("adminModal").classList.add("flex");
+            renderAdminProductManageList();
           } else if (pass !== null) {
             alert("Password ntabwo ariyo!");
           }
@@ -303,8 +302,7 @@
       list.forEach(p => {
         grid.innerHTML += `
           <div class="bg-slate-800 rounded-lg p-1.5 flex flex-col justify-between relative shadow-sm border border-slate-700">
-            <button class="admin-del-btn absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 items-center justify-center text-[10px] font-bold z-10" title="Gusiba Igicuruzwa" onclick="deleteProduct('${p.id}')">✕</button>
-            <img src="${p.img}" class="w-full aspect-square object-cover rounded bg-slate-700" alt="${p.name}">
+            <img src="${p.img}" class="w-full aspect-square object-cover rounded bg-slate-700" alt="${p.name}" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
             <div class="flex gap-1 mt-1">
               <span class="text-[7px] font-bold px-1 py-0.5 rounded bg-blue-900 text-blue-200">OB</span>
               <span class="text-[7px] font-bold px-1 py-0.5 rounded bg-emerald-900 text-emerald-200">Stock: ${p.stock || 10}</span>
@@ -321,7 +319,7 @@
       });
     }
 
-    // --- REALTIME PRODUCTS MANAGEMENT (LOCAL & FIREBASE) ---
+    // --- PRODUCTS MANAGEMENT ---
     function fetchProducts() {
       const storedProds = localStorage.getItem("ob_products");
       if (storedProds) {
@@ -331,6 +329,29 @@
         localStorage.setItem("ob_products", JSON.stringify(currentProducts));
       }
       renderProducts(currentProducts);
+    }
+
+    function renderAdminProductManageList() {
+      const container = document.getElementById("adminProductManageList");
+      container.innerHTML = "";
+      if (currentProducts.length === 0) {
+        container.innerHTML = `<div class="text-gray-400">Nta gicuruzwa gihari.</div>`;
+        return;
+      }
+      currentProducts.forEach(p => {
+        container.innerHTML += `
+          <div class="flex justify-between items-center bg-slate-900 p-2 rounded border border-slate-700">
+            <div class="flex items-center gap-2">
+              <img src="${p.img}" class="w-8 h-8 object-cover rounded" onerror="this.src='https://via.placeholder.com/50'">
+              <div>
+                <b>${p.name}</b>
+                <div class="text-[9px] text-gray-400">${Number(p.price).toLocaleString()} RWF</div>
+              </div>
+            </div>
+            <button onclick="deleteProduct('${p.id}')" class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-[10px] font-bold">🗑️ Siba</button>
+          </div>
+        `;
+      });
     }
 
     function addNewProduct() {
@@ -354,6 +375,7 @@
       currentProducts.unshift(newProd);
       localStorage.setItem("ob_products", JSON.stringify(currentProducts));
       renderProducts(currentProducts);
+      renderAdminProductManageList();
 
       document.getElementById("admProdName").value = "";
       document.getElementById("admProdPrice").value = "";
@@ -367,6 +389,7 @@
         currentProducts = currentProducts.filter(p => p.id !== id);
         localStorage.setItem("ob_products", JSON.stringify(currentProducts));
         renderProducts(currentProducts);
+        renderAdminProductManageList();
         alert("🗑️ Igicuruzwa cyasibwe ku rubuga!");
       }
     }
@@ -389,7 +412,7 @@
       const title = document.getElementById("admHeroTitle").value.trim();
       const desc = document.getElementById("admHeroDesc").value.trim();
       if (!title || !desc) return alert("Uzuza Title na Description!");
-      
+
       const heroData = { title, desc };
       localStorage.setItem("ob_hero", JSON.stringify(heroData));
       document.getElementById("heroTitle").innerText = title;
@@ -446,14 +469,14 @@
       document.getElementById("cartModal").classList.remove("flex");
     }
 
-    // --- CHECKOUT VIA WHATSAPP ---
+    // --- CHECKOUT VIA WHATSAPP (WITH FULL CUSTOMER DETAILS) ---
     function checkoutWhatsApp() {
       const name = document.getElementById("custName").value.trim();
       const phone = document.getElementById("custPhone").value.trim();
       const loc = document.getElementById("custLoc").value.trim();
 
       if (!name || !phone || !loc || cart.length === 0) {
-        return alert("Uzuza amakuru yose kandi ushyire ibicuruzwa mu gategobo!");
+        return alert("Uzuza Amazina Yombi, Telefoni, n'Aho Utuye kandi ushyire ibicuruzwa mu gategobo!");
       }
 
       let orderSummary = cart.map(c => `- ${c.name} (x${c.qty}): ${(c.price * c.qty).toLocaleString()} RWF`).join("\n");
@@ -475,12 +498,12 @@
       localStorage.setItem("ob_orders", JSON.stringify(storedOrders));
       fetchOrders();
 
-      let msg = `*ORDER MSHYA KURI OB SHOP*%0A%0A*Umuguzi:* ${name}%0A*Telefoni:* ${phone}%0A*Aho aherereye:* ${loc}%0A%0A*Ibicuruzwa:*%0A${encodeURIComponent(orderSummary)}%0A%0A*TOTAL YOSE:* ${total.toLocaleString()} RWF`;
+      let msg = `*ODA MSHYA KURI OB SHOP*%0A%0A*👤 AMAZINA YOMBI:* ${name}%0A*📞 TELEFONI:* ${phone}%0A*📍 AHO UTUYE / LOCATION:* ${loc}%0A%0A*📦 IBICURUZWA:*%0A${encodeURIComponent(orderSummary)}%0A%0A*💰 TOTAL YOSE:* ${total.toLocaleString()} RWF`;
       window.open(`https://wa.me/${TARGET_WHATSAPP}?text=${msg}`, '_blank');
     }
 
     function directOrder(name, price) {
-      let msg = `*ORDER MSHYA KURI OB SHOP*%0A%0A*Igicuruzwa:* ${name}%0A*Igiciro:* ${price.toLocaleString()} RWF`;
+      let msg = `*ODA MSHYA KURI OB SHOP*%0A%0A*Igicuruzwa:* ${name}%0A*Igiciro:* ${price.toLocaleString()} RWF`;
       window.open(`https://wa.me/${TARGET_WHATSAPP}?text=${msg}`, '_blank');
     }
 
@@ -490,7 +513,7 @@
       let storedOrders = JSON.parse(localStorage.getItem("ob_orders") || "[]");
       const tbody = document.getElementById("adminOrdersTableBody");
       tbody.innerHTML = "";
-      
+
       let count = 0, rev = 0;
 
       storedOrders.forEach(o => {
@@ -509,7 +532,7 @@
         tbody.innerHTML += `
           <tr class="border-b border-slate-700">
             <td class="p-1">${o.date || 'N/A'}</td>
-            <td class="p-1"><b>${o.customer}</b><br><span class="text-gray-400">${o.phone}</span></td>
+            <td class="p-1"><b>${o.customer}</b><br><span class="text-gray-400">${o.phone} | ${o.location || ''}</span></td>
             <td class="p-1">${o.items ? o.items.length : 1} items</td>
             <td class="p-1"><b>${(o.total || 0).toLocaleString()} RWF</b></td>
             <td class="p-1"><span class="px-1.5 py-0.5 rounded font-bold ${statusColor}">● ${currentStatus}</span></td>
