@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="rw">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OB SHOP - Official Store</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <style>
+    body { background-color: #0f172a; color: #f8fafc; padding-bottom: 70px; }
+    body.light-mode { background-color: #f4f6f8; color: #1e293b; }
+
+    /* Top Ticker */
+    .ticker-wrap { background: #f59e0b; color: #000; font-size: 11px; font-weight: 800; padding: 5px 0; overflow: hidden; white-space: nowrap; }
+    .ticker-move { display: inline-block; animation: ticker 15s linear infinite; }
+    @keyframes ticker { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+
+    /* Product Grid - 3 Columns Always */
+    .product-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 8px 10px; }
+
+    /* Admin Delete Button */
+    .admin-del-btn { display: none; }
+    body.admin-mode-active .admin-del-btn { display: flex; }
+  </style>
+</head>
+<body id="mainBody">
+
+  <!-- Promo Ticker Bar -->
+  <div class="ticker-wrap">
+    <div class="ticker-move" id="tickerText">🔥 Murakaza neza kuri OB SHOP! Ibicuruzwa byiza ku giciro cyo hasi cyane. Dukugezaho aho uri! 📦</div>
+  </div>
+
+  <!-- Header -->
+  <header class="bg-[#003366] text-white px-4 py-3 flex justify-between items-center sticky top-0 z-50">
+    <div class="logo text-xl font-black cursor-pointer select-none" id="logoBtn">OB <span class="text-[#f59e0b]">SHOP</span></div>
+    <div class="flex items-center gap-2">
+      <select class="bg-[#f59e0b] text-black text-xs font-bold px-2 py-1 rounded" id="langSelector" onchange="switchLanguage(this.value)">
+        <option value="rw">RW</option>
+        <option value="en">EN</option>
+      </select>
+      <button class="text-lg" onclick="toggleTheme()">☀️</button>
+    </div>
+  </header>
+
+  <!-- Search & Camera Bar -->
+  <div class="bg-[#003366] px-4 pb-3">
+    <div class="flex bg-slate-800 dark:bg-slate-800 rounded-full px-3 py-1.5 items-center gap-2 border border-slate-700">
+      🔍 <input type="text" id="searchInput" placeholder="Shakisha igicuruzwa..." onkeyup="searchProducts()" class="w-full text-xs bg-transparent outline-none text-white">
+      <button onclick="triggerCamera()" class="text-base text-[#f59e0b]" title="Fata ifoto ushake">📷</button>
+      <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="processCameraSearch(event)">
+    </div>
+  </div>
+
+  <!-- Categories Horizontal Strip -->
+  <div class="flex gap-2 px-4 py-2 overflow-x-auto bg-[#002244] text-white whitespace-nowrap text-xs">
+    <button class="cat-btn bg-[#f59e0b] text-black px-3 py-1 rounded-full font-semibold" onclick="filterCat('All', this)">Byose</button>
+    <button class="cat-btn bg-white/20 px-3 py-1 rounded-full font-semibold" onclick="filterCat('Shoes', this)">Inkweto</button>
+    <button class="cat-btn bg-white/20 px-3 py-1 rounded-full font-semibold" onclick="filterCat('Clothes', this)">Imyenda</button>
+    <button class="cat-btn bg-white/20 px-3 py-1 rounded-full font-semibold" onclick="filterCat('Food', this)">Ibiribwa</button>
+    <button class="cat-btn bg-white/20 px-3 py-1 rounded-full font-semibold" onclick="filterCat('Drinks', this)">Ibinyobwa</button>
+    <button class="cat-btn bg-white/20 px-3 py-1 rounded-full font-semibold" onclick="filterCat('Electronics', this)">Ikoranabuhanga</button>
+  </div>
+
+  <!-- Hero Banner -->
+  <div class="m-3 p-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl text-white">
+    <span class="bg-red-500 text-[9px] font-bold px-2 py-0.5 rounded uppercase" id="heroTag">POROMOSIYO Y'UMUNSI</span>
+    <h3 class="text-sm font-extrabold mt-1" id="heroTitle">Smart Watch & Imyenda Bishya!</h3>
+    <p class="text-[11px] opacity-90" id="heroDesc">Gana ibicuruzwa ku giciro cyiza cyane uyu munsi.</p>
+  </div>
+
+  <div class="text-xs font-black px-4 py-1 text-[#f59e0b] uppercase" id="sectionTitle">IBICURUZWA BYOSE</div>
+
+  <!-- Product Grid (3 Columns Layout) -->
+  <div class="product-grid" id="productGrid"></div>
+
+  <!-- Cart Modal -->
+  <div class="fixed inset-0 bg-black/70 hidden items-end justify-center z-50" id="cartModal">
+    <div class="bg-slate-800 text-white w-full max-w-lg rounded-t-2xl p-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-3">
+        <div class="text-sm font-bold" id="cartModalTitle">🛒 Agategobo Kawe (Cart)</div>
+        <button class="text-gray-400 text-lg font-bold" onclick="closeCartModal()">✕</button>
+      </div>
+
+      <div id="cartItemsList"></div>
+
+      <div class="bg-[#003366] text-white p-3 rounded-lg flex justify-between font-bold my-3 text-xs">
+        <div>TOTAL YOSE:</div>
+        <span class="text-[#f59e0b]" id="cartTotalPrice">0 RWF</span>
+      </div>
+
+      <div class="space-y-2 text-xs">
+        <div>
+          <label class="font-bold block mb-1">Izina Ryose *</label>
+          <input type="text" id="custName" placeholder="Urugero: Keza Alice" class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
+        </div>
+        <div>
+          <label class="font-bold block mb-1">Nimero ya Telefoni *</label>
+          <input type="tel" id="custPhone" placeholder="078..." class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
+        </div>
+        <div>
+          <label class="font-bold block mb-1">Aho Uherereye (Location) *</label>
+          <input type="text" id="custLoc" placeholder="Kigali, Nyarugenge" class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <button class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded font-bold text-xs flex items-center justify-center gap-2" onclick="checkoutWhatsApp()">
+          💬 Tumiza Byose kuri WhatsApp
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Reviews Modal -->
+  <div class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4" id="reviewModal">
+    <div class="bg-slate-800 text-white w-full max-w-md rounded-xl p-4 max-h-[80vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-2">
+        <div class="text-xs font-bold" id="revModalTitle">Ibitekerezo by'igicuruzwa</div>
+        <button class="text-gray-400 font-bold" onclick="closeReviewModal()">✕</button>
+      </div>
+
+      <div class="space-y-2 my-3 text-xs" id="reviewList"></div>
+
+      <div class="border-t border-slate-700 pt-2 space-y-2 text-xs">
+        <input type="text" id="revName" placeholder="Izina ryawe" class="w-full p-2 border border-slate-700 rounded bg-slate-900 text-white">
+        <select id="revStars" class="w-full p-2 border border-slate-700 rounded bg-slate-900 font-bold text-amber-500">
+          <option value="5">⭐⭐⭐⭐⭐ (5 Stars)</option>
+          <option value="4">⭐⭐⭐⭐ (4 Stars)</option>
+          <option value="3">⭐⭐⭐ (3 Stars)</option>
+          <option value="2">⭐⭐ (2 Stars)</option>
+          <option value="1">⭐ (1 Star)</option>
+        </select>
+        <textarea id="revComment" placeholder="Andika igitekerezo cyawe..." class="w-full p-2 border border-slate-700 rounded bg-slate-900 text-white"></textarea>
+        <button class="w-full bg-blue-600 text-white py-2 rounded font-bold" onclick="submitReview()">Siga Igitekerezo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Full Screen Admin Dashboard -->
+  <div class="fixed inset-0 bg-[#0f172a] text-white z-50 hidden flex-col overflow-y-auto p-4" id="adminModal">
+    <div class="flex justify-between items-center pb-3 border-b border-slate-700 mb-4">
+      <div class="text-base font-black text-[#f59e0b]">⚙️ OB SHOP - Admin Management Panel</div>
+      <button class="bg-red-600 text-white px-3 py-1 rounded font-bold text-xs" onclick="closeAdminModal()">✕ Close Admin</button>
+    </div>
+
+    <div class="bg-slate-800 p-3 rounded-lg flex justify-around mb-4 border border-slate-700 text-xs">
+      <div>TOTAL ORDERS: <b id="repTotalOrders" class="text-amber-500">0</b></div>
+      <div>TOTAL INCOME: <b id="repTotalRevenue" class="text-emerald-500">0 RWF</b></div>
+    </div>
+
+    <!-- Edit Ticker -->
+    <div class="bg-slate-800 p-3 rounded-lg mb-3 space-y-2 text-xs">
+      <div class="font-bold text-sky-400 uppercase">📢 Edit Promo Ticker Text</div>
+      <input type="text" id="admTickerInput" placeholder="Amagambo araguruka hejuru..." class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
+      <button class="w-full bg-blue-600 py-2 rounded font-bold" onclick="saveTickerText()">💾 Bika Amagambo</button>
+    </div>
+
+    <!-- Edit Hero Banner -->
+    <div class="bg-slate-800 p-3 rounded-lg mb-3 space-y-2 text-xs">
+      <div class="font-bold text-sky-400 uppercase">🎨 Edit Hero Banner</div>
+      <input type="text" id="admHeroTitle" placeholder="Title..." class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
+      <input type="text" id="admHeroDesc" placeholder="Description..." class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
+      <button class="w-full bg-blue-600 py-2 rounded font-bold" onclick="saveHeroBanner()">💾 Bika Poromosiyo</button>
+    </div>
+
+    <!-- Add New Product -->
+    <div class="bg-slate-800 p-3 rounded-lg mb-3 space-y-2 text-xs">
+      <div class="font-bold text-sky-400 uppercase">📦 Add New Product</div>
+      <input type="text" id="admProdName" placeholder="Izina ry'igicuruzwa" class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
+      <input type="number" id="admProdPrice" placeholder="Igiciro (RWF)" class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
+      <input type="number" id="admProdStock" placeholder="Ingano mu bubiko (Stock)" class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white" value="10">
+      <select id="admProdCat" class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
+        <option value="Shoes">Inkweto</option>
+        <option value="Clothes">Imyenda</option>
+        <option value="Food">Ibiribwa</option>
+        <option value="Drinks">Ibinyobwa</option>
+        <option value="Electronics">Ikoranabuhanga</option>
+      </select>
+      <input type="text" id="admProdImg" placeholder="Link y'Ifoto (Image URL)" class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
+      <button class="w-full bg-emerald-600 py-2 rounded font-bold" onclick="addNewProduct()">➕ Ongeraho Igicuruzwa</button>
+    </div>
+
+    <!-- Live Orders List -->
+    <div class="bg-slate-800 p-3 rounded-lg text-xs space-y-2">
+      <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+        <span class="font-bold text-sky-400 uppercase">📊 Live Orders List</span>
+        <select id="admOrderFilter" onchange="fetchOrders()" class="p-1 rounded bg-slate-900 text-amber-500 border border-slate-700 font-bold">
+          <option value="All">Byose Statuses</option>
+          <option value="Pending">Pending</option>
+          <option value="In Transit">In Transit</option>
+          <option value="Delivered">Delivered</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-[11px]">
+          <thead>
+            <tr class="border-b border-slate-700">
+              <th class="p-1">Date</th>
+              <th class="p-1">Customer</th>
+              <th class="p-1">Items</th>
+              <th class="p-1">Total</th>
+              <th class="p-1">Status</th>
+              <th class="p-1">Action</th>
+            </tr>
+          </thead>
+          <tbody id="adminOrdersTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clean Footer Section -->
+  <footer class="mt-8 mb-16 py-4 text-center text-xs text-slate-500 border-t border-slate-800">
+    <div>© 2026 <b>OB SHOP RWANDA</b>. All Rights Reserved.</div>
+  </footer>
+
+  <!-- Bottom Navigation Bar -->
+  <div class="fixed bottom-0 left-0 w-full bg-slate-900 border-t border-slate-800 flex justify-around py-2 z-40 text-[10px] font-bold text-slate-400">
+    <div class="flex flex-col items-center cursor-pointer text-[#f59e0b]" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+      🏠 <span>Ahabanza</span>
+    </div>
+    <div class="flex flex-col items-center cursor-pointer relative" onclick="openCartModal()">
+      🛒 <span>Agategobo</span>
+      <div class="bg-red-600 text-white text-[8px] px-1 rounded-full absolute -top-1 -right-2" id="cartCountBadge">0</div>
+    </div>
+    <div class="flex flex-col items-center cursor-pointer" onclick="window.location.href='https://wa.me/250782093143'">
+      💬 <span>Support</span>
+    </div>
+  </div>
+
+  <script>
+    // --- FIREBASE CONFIGURATION ---
+    const firebaseConfig = {
+      databaseURL: "https://ob-shop-default-rtdb.firebaseio.com"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // --- STATE MANAGEMENT ---
+    const TARGET_WHATSAPP = "250782093143";
+    const ADMIN_PASSWORD = "OB@Shop2026!";
+
+    let sampleProducts = [
+      { id: "1", name: "Nike Sneaker", price: 25000, stock: 5, cat: "Shoes", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300" },
+      { id: "2", name: "Smart Watch V8", price: 18000, stock: 8, cat: "Electronics", img: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300" },
+      { id: "3", name: "T-Shirt White", price: 10000, stock: 12, cat: "Clothes", img: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=300" }
+    ];
+
+    let cart = [];
+    let clickCount = 0, clickTimer;
+    let selectedRevProdId = null;
+
+    // --- INITIALIZATION ---
+    window.onload = function() {
+      setupTripleClickAdmin();
+      fetchProducts();
+      fetchTicker();
+      fetchHero();
+      fetchOrders();
+    };
+
+    // --- TRIPLE CLICK LOGO SETUP FOR ADMIN ACCESS WITH PASSWORD ---
+    function setupTripleClickAdmin() {
+      const logo = document.getElementById("logoBtn");
+      logo.addEventListener("click", () => {
+        clickCount++;
+        clearTimeout(clickTimer);
+        if (clickCount === 3) {
+          const pass = prompt("Injiza Password ya Admin:");
+          if (pass === ADMIN_PASSWORD) {
+            document.body.classList.add("admin-mode-active");
+            document.getElementById("adminModal").classList.remove("hidden");
+            document.getElementById("adminModal").classList.add("flex");
+          } else if (pass !== null) {
+            alert("Password ntabwo ariyo!");
+          }
+          clickCount = 0;
+        } else {
+          clickTimer = setTimeout(() => { clickCount = 0; }, 800);
+        }
+      });
+    }
+
+    function closeAdminModal() {
+      document.getElementById("adminModal").classList.add("hidden");
+      document.getElementById("adminModal").classList.remove("flex");
+    }
+
+    // --- RENDER PRODUCTS ---
+    function renderProducts(list) {
+      const grid = document.getElementById("productGrid");
+      grid.innerHTML = "";
+      list.forEach(p => {
+        grid.innerHTML += `
+          <div class="bg-slate-800 rounded-lg p-1.5 flex flex-col justify-between relative shadow-sm border border-slate-700">
+            <button class="admin-del-btn absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 items-center justify-center text-[10px] font-bold z-10" onclick="deleteProduct('${p.id}')">✕</button>
+            <img src="${p.img}" class="w-full aspect-square object-cover rounded bg-slate-700" alt="${p.name}">
+            <div class="flex gap-1 mt-1">
+              <span class="text-[7px] font-bold px-1 py-0.5 rounded bg-blue-900 text-blue-200">OB</span>
+              <span class="text-[7px] font-bold px-1 py-0.5 rounded bg-emerald-900 text-emerald-200">Stock: ${p.stock || 10}</span>
+            </div>
+            <div class="text-[10px] font-bold mt-1 truncate text-white">${p.name}</div>
+            <div class="text-[8px] text-amber-500 cursor-pointer" onclick="openReviewModal('${p.id}', '${p.name}')">⭐⭐⭐⭐⭐ (Reviews)</div>
+            <div class="text-[10px] font-black text-red-400">${(p.price || 0).toLocaleString()} RWF</div>
+            <div class="flex gap-1 mt-1">
+              <button class="bg-emerald-600 hover:bg-emerald-700 text-white rounded py-1 px-1 text-[9px] font-bold flex-1 text-center" onclick="directOrder('${p.name}', ${p.price})">Tumiza</button>
+              <button class="bg-blue-600 hover:bg-blue-700 text-white rounded py-1 px-2 text-[10px]" onclick="addToCart('${p.id}', '${p.name}', ${p.price})">🛒</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // --- FIREBASE SYNC ---
+    function fetchProducts() {
+      db.ref("products").on("value", snapshot => {
+        const data = snapshot.val();
+        if (data) {
+          const loaded = Object.keys(data).map(k => ({ id: k, ...data[k] }));
+          renderProducts(loaded);
+        } else {
+          renderProducts(sampleProducts);
+        }
+      });
+    }
+
+    function addNewProduct() {
+      const name = document.getElementById("admProdName").value;
+      const price = Number(document.getElementById("admProdPrice").value);
+      const stock = Number(document.getElementById("admProdStock").value) || 10;
+      const cat = document.getElementById("admProdCat").value;
+      const img = document.getElementById("admProdImg").value || "https://via.placeholder.com/150";
+
+      if (!name || !price) return alert("Uzuza izina n'igiciro!");
+
+      db.ref("products").push({ name, price, stock, cat, img }, err => {
+        if (!err) {
+          alert("Igicuruzwa cyongeweho neza!");
+          document.getElementById("admProdName").value = "";
+          document.getElementById("admProdPrice").value = "";
+          document.getElementById("admProdImg").value = "";
+        }
+      });
+    }
+
+    function deleteProduct(id) {
+      if (confirm("Urareba niba ushaka gusiba iki gicuruzwa?")) {
+        db.ref("products/" + id).remove();
+      }
+    }
+
+    // --- PROMO & HERO EDITING ---
+    function saveTickerText() {
+      const txt = document.getElementById("admTickerInput").value;
+      if (txt) db.ref("settings/ticker").set(txt);
+    }
+
+    function fetchTicker() {
+      db.ref("settings/ticker").on("value", snapshot => {
+        if (snapshot.exists()) document.getElementById("tickerText").innerText = snapshot.val();
+      });
+    }
+
+    function saveHeroBanner() {
+      const title = document.getElementById("admHeroTitle").value;
+      const desc = document.getElementById("admHeroDesc").value;
+      if (title && desc) db.ref("settings/hero").set({ title, desc });
+    }
+
+    function fetchHero() {
+      db.ref("settings/hero").on("value", snapshot => {
+        if (snapshot.exists()) {
+          const h = snapshot.val();
+          document.getElementById("heroTitle").innerText = h.title;
+          document.getElementById("heroDesc").innerText = h.desc;
+        }
+      });
+    }
+
+    // --- CART SYSTEM ---
+    function addToCart(id, name, price) {
+      const exist = cart.find(i => i.id === id);
+      if (exist) exist.qty += 1;
+      else cart.push({ id, name, price, qty: 1 });
+      updateCartUI();
+    }
+
+    function updateCartUI() {
+      document.getElementById("cartCountBadge").innerText = cart.reduce((a, b) => a + b.qty, 0);
+      const list = document.getElementById("cartItemsList");
+      list.innerHTML = "";
+      let total = 0;
+      cart.forEach((item, index) => {
+        total += item.price * item.qty;
+        list.innerHTML += `
+          <div class="flex items-center justify-between bg-slate-900 p-2 rounded mb-1 text-xs">
+            <div><b>${item.name}</b> x${item.qty}</div>
+            <div>${(item.price * item.qty).toLocaleString()} RWF</div>
+            <button onclick="removeFromCart(${index})" class="text-red-500 font-bold">✕</button>
+          </div>
+        `;
+      });
+      document.getElementById("cartTotalPrice").innerText = total.toLocaleString() + " RWF";
+    }
+
+    function removeFromCart(i) {
+      cart.splice(i, 1);
+      updateCartUI();
+    }
+
+    function openCartModal() {
+      document.getElementById("cartModal").classList.remove("hidden");
+      document.getElementById("cartModal").classList.add("flex");
+    }
+    function closeCartModal() {
+      document.getElementById("cartModal").classList.add("hidden");
+      document.getElementById("cartModal").classList.remove("flex");
+    }
+
+    // --- CHECKOUT VIA WHATSAPP ---
+    function checkoutWhatsApp() {
+      const name = document.getElementById("custName").value;
+      const phone = document.getElementById("custPhone").value;
+      const loc = document.getElementById("custLoc").value;
+
+      if (!name || !phone || !loc || cart.length === 0) {
+        return alert("Uzuza amakuru yose kandi ushyire ibicuruzwa mu gategobo!");
+      }
+
+      let orderSummary = cart.map(c => `- ${c.name} (x${c.qty}): ${(c.price * c.qty).toLocaleString()} RWF`).join("\n");
+      let total = cart.reduce((a, b) => a + (b.price * b.qty), 0);
+
+      db.ref("orders").push({
+        customer: name,
+        phone: phone,
+        location: loc,
+        items: cart,
+        total: total,
+        status: "Pending",
+        date: new Date().toLocaleDateString()
+      });
+
+      let msg = `*ORDER MSHYA KURI OB SHOP*%0A%0A*Umuguzi:* ${name}%0A*Telefoni:* ${phone}%0A*Aho aherereye:* ${loc}%0A%0A*Ibicuruzwa:*%0A${encodeURIComponent(orderSummary)}%0A%0A*TOTAL YOSE:* ${total.toLocaleString()} RWF`;
+      window.open(`https://wa.me/${TARGET_WHATSAPP}?text=${msg}`, '_blank');
+    }
+
+    function directOrder(name, price) {
+      let msg = `*ORDER MSHYA KURI OB SHOP*%0A%0A*Igicuruzwa:* ${name}%0A*Igiciro:* ${price.toLocaleString()} RWF`;
+      window.open(`https://wa.me/${TARGET_WHATSAPP}?text=${msg}`, '_blank');
+    }
+
+    // --- FETCH ORDERS & STATUS MANAGEMENT ---
+    function fetchOrders() {
+      const selectedFilter = document.getElementById("admOrderFilter").value;
+
+      db.ref("orders").on("value", snapshot => {
+        const tbody = document.getElementById("adminOrdersTableBody");
+        tbody.innerHTML = "";
+        let count = 0, rev = 0;
+
+        snapshot.forEach(snap => {
+          const orderId = snap.key;
+          const o = snap.val();
+          const currentStatus = o.status || "Pending";
+
+          if (selectedFilter !== "All" && currentStatus !== selectedFilter) return;
+
+          count++;
+          if (currentStatus !== "Cancelled") rev += o.total || 0;
+
+          let statusColor = "text-amber-500 bg-amber-500/10";
+          if (currentStatus === "In Transit") statusColor = "text-sky-400 bg-sky-400/10";
+          if (currentStatus === "Delivered") statusColor = "text-emerald-500 bg-emerald-500/10";
+          if (currentStatus === "Cancelled") statusColor = "text-red-500 bg-red-500/10";
+
+          tbody.innerHTML += `
+            <tr class="border-b border-slate-700">
+              <td class="p-1">${o.date || 'N/A'}</td>
+              <td class="p-1"><b>${o.customer}</b><br><span class="text-gray-400">${o.phone}</span></td>
+              <td class="p-1">${o.items ? o.items.length : 1} items</td>
+              <td class="p-1"><b>${(o.total || 0).toLocaleString()} RWF</b></td>
+              <td class="p-1"><span class="px-1.5 py-0.5 rounded font-bold ${statusColor}">● ${currentStatus}</span></td>
+              <td class="p-1">
+                <select onchange="updateOrderStatus('${orderId}', this.value)" class="bg-slate-900 border border-slate-700 rounded p-0.5 text-[10px]">
+                  <option value="Pending" ${currentStatus === 'Pending' ? 'selected' : ''}>Pending</option>
+                  <option value="In Transit" ${currentStatus === 'In Transit' ? 'selected' : ''}>In Transit</option>
+                  <option value="Delivered" ${currentStatus === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                  <option value="Cancelled" ${currentStatus === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                </select>
+              </td>
+            </tr>
+          `;
+        });
+        document.getElementById("repTotalOrders").innerText = count;
+        document.getElementById("repTotalRevenue").innerText = rev.toLocaleString() + " RWF";
+      });
+    }
+
+    function updateOrderStatus(orderId, newStatus) {
+      db.ref("orders/" + orderId).update({ status: newStatus });
+    }
+
+    // --- REVIEWS SYSTEM ---
+    function openReviewModal(prodId, name) {
+      selectedRevProdId = prodId;
+      document.getElementById("revModalTitle").innerText = "Ibitekerezo: " + name;
+      document.getElementById("reviewModal").classList.remove("hidden");
+      document.getElementById("reviewModal").classList.add("flex");
+
+      db.ref("reviews/" + prodId).on("value", snap => {
+        const list = document.getElementById("reviewList");
+        list.innerHTML = "";
+        if (snap.exists()) {
+          snap.forEach(r => {
+            const rev = r.val();
+            list.innerHTML += `<div class="bg-slate-900 p-2 rounded font-sans"><b>${rev.name}</b> (${'⭐'.repeat(rev.stars)})<p class="text-gray-400 mt-1">${rev.comment}</p></div>`;
+          });
+        } else {
+          list.innerHTML = "<div class='text-gray-400'>Nta gitekerezo kirajya ku gicuruzwa.</div>";
+        }
+      });
+    }
+
+    function closeReviewModal() {
+      document.getElementById("reviewModal").classList.add("hidden");
+      document.getElementById("reviewModal").classList.remove("flex");
+    }
+
+    function submitReview() {
+      const name = document.getElementById("revName").value;
+      const stars = document.getElementById("revStars").value;
+      const comment = document.getElementById("revComment").value;
+
+      if (!name || !comment) return alert("Uzuza izina n'igitekerezo!");
+
+      db.ref("reviews/" + selectedRevProdId).push({ name, stars, comment }, () => {
+        document.getElementById("revName").value = "";
+        document.getElementById("revComment").value = "";
+      });
+    }
+
+    // --- SEARCH & CAMERA IMAGE SEARCH ---
+    function searchProducts() {
+      const q = document.getElementById("searchInput").value.toLowerCase();
+      db.ref("products").once("value", snap => {
+        const data = snap.val() ? Object.values(snap.val()) : sampleProducts;
+        renderProducts(data.filter(p => p.name.toLowerCase().includes(q)));
+      });
+    }
+
+    function filterCat(cat, btn) {
+      document.querySelectorAll(".cat-btn").forEach(b => {
+        b.classList.remove("bg-[#f59e0b]", "text-black");
+        b.classList.add("bg-white/20", "text-white");
+      });
+      btn.classList.remove("bg-white/20", "text-white");
+      btn.classList.add("bg-[#f59e0b]", "text-black");
+
+      db.ref("products").once("value", snap => {
+        const data = snap.val() ? Object.values(snap.val()) : sampleProducts;
+        if (cat === "All") renderProducts(data);
+        else renderProducts(data.filter(p => p.cat === cat));
+      });
+    }
+
+    function triggerCamera() {
+      document.getElementById("cameraInput").click();
+    }
+
+    function processCameraSearch(e) {
+      if (e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        const keyword = file.name.split('.')[0].toLowerCase().replace(/[^a-z0-0]/g, '');
+
+        db.ref("products").once("value", snap => {
+          const data = snap.val() ? Object.values(snap.val()) : sampleProducts;
+          let matched = data.filter(p => p.name.toLowerCase().includes(keyword));
+          
+          if (matched.length > 0) {
+            renderProducts(matched);
+            alert(`Yakiriye ifoto! Habonetse ibicuruzwa ${matched.length} bishobora gusa nayo.`);
+          } else {
+            renderProducts(data);
+            alert("Ifoto yakiriwe! Twerekanye ibicuruzwa byose kuko nta paji ihitamo ikintu burimburi.");
+          }
+        });
+      }
+    }
+
+    // --- THEME & LANGUAGE SWITCHER ---
+    function toggleTheme() { document.body.classList.toggle("light-mode"); }
+    function switchLanguage(lang) {
+      if (lang === "en") {
+        document.getElementById("sectionTitle").innerText = "ALL PRODUCTS";
+        document.getElementById("heroTag").innerText = "TODAY'S PROMO";
+      } else {
+        document.getElementById("sectionTitle").innerText = "IBICURUZWA BYOSE";
+        document.getElementById("heroTag").innerText = "POROMOSIYO Y'UMUNSI";
+      }
+    }
+  </script>
+</body>
+</html>
