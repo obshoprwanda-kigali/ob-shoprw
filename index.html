@@ -23,7 +23,7 @@
     /* Product Grid - 3 Columns Always */
     .product-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 8px 10px; }
 
-    /* Admin Delete Button */
+    /* Admin Delete Button - Isiba igicuruzwa kitakiri ku isoko */
     .admin-del-btn { display: none; }
     body.admin-mode-active .admin-del-btn { display: flex; }
   </style>
@@ -49,7 +49,7 @@
 
   <!-- Search & Camera Bar -->
   <div class="bg-[#003366] px-4 pb-3">
-    <div class="flex bg-slate-800 dark:bg-slate-800 rounded-full px-3 py-1.5 items-center gap-2 border border-slate-700">
+    <div class="flex bg-slate-800 rounded-full px-3 py-1.5 items-center gap-2 border border-slate-700">
       🔍 <input type="text" id="searchInput" placeholder="Shakisha igicuruzwa..." onkeyup="searchProducts()" class="w-full text-xs bg-transparent outline-none text-white">
       <button onclick="triggerCamera()" class="text-base text-[#f59e0b]" title="Fata ifoto ushake">📷</button>
       <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="processCameraSearch(event)">
@@ -154,23 +154,23 @@
     </div>
 
     <!-- Edit Ticker -->
-    <div class="bg-slate-800 p-3 rounded-lg mb-3 space-y-2 text-xs">
-      <div class="font-bold text-sky-400 uppercase">📢 Edit Promo Ticker Text</div>
+    <div class="bg-slate-800 p-3 rounded-lg mb-3 space-y-2 text-xs border border-slate-700">
+      <div class="font-bold text-sky-400 uppercase">📢 EDIT PROMO TICKER TEXT</div>
       <input type="text" id="admTickerInput" placeholder="Amagambo araguruka hejuru..." class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
-      <button class="w-full bg-blue-600 py-2 rounded font-bold" onclick="saveTickerText()">💾 Bika Amagambo</button>
+      <button class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded font-bold" onclick="saveTickerText()">💾 Bika Amagambo (Save Ticker)</button>
     </div>
 
     <!-- Edit Hero Banner -->
-    <div class="bg-slate-800 p-3 rounded-lg mb-3 space-y-2 text-xs">
-      <div class="font-bold text-sky-400 uppercase">🎨 Edit Hero Banner</div>
+    <div class="bg-slate-800 p-3 rounded-lg mb-3 space-y-2 text-xs border border-slate-700">
+      <div class="font-bold text-sky-400 uppercase">🎨 EDIT HERO BANNER</div>
       <input type="text" id="admHeroTitle" placeholder="Title..." class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
       <input type="text" id="admHeroDesc" placeholder="Description..." class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
-      <button class="w-full bg-blue-600 py-2 rounded font-bold" onclick="saveHeroBanner()">💾 Bika Poromosiyo</button>
+      <button class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded font-bold" onclick="saveHeroBanner()">💾 Bika Poromosiyo (Save Hero)</button>
     </div>
 
     <!-- Add New Product -->
-    <div class="bg-slate-800 p-3 rounded-lg mb-3 space-y-2 text-xs">
-      <div class="font-bold text-sky-400 uppercase">📦 Add New Product</div>
+    <div class="bg-slate-800 p-3 rounded-lg mb-3 space-y-2 text-xs border border-slate-700">
+      <div class="font-bold text-sky-400 uppercase">📦 ADD NEW PRODUCT</div>
       <input type="text" id="admProdName" placeholder="Izina ry'igicuruzwa" class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
       <input type="number" id="admProdPrice" placeholder="Igiciro (RWF)" class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
       <input type="number" id="admProdStock" placeholder="Ingano mu bubiko (Stock)" class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white" value="10">
@@ -182,11 +182,11 @@
         <option value="Electronics">Ikoranabuhanga</option>
       </select>
       <input type="text" id="admProdImg" placeholder="Link y'Ifoto (Image URL)" class="w-full p-2 border border-slate-700 bg-slate-900 rounded outline-none text-white">
-      <button class="w-full bg-emerald-600 py-2 rounded font-bold" onclick="addNewProduct()">➕ Ongeraho Igicuruzwa</button>
+      <button class="w-full bg-emerald-600 hover:bg-emerald-700 py-2 rounded font-bold" onclick="addNewProduct()">➕ Ongeraho Igicuruzwa (Add Product)</button>
     </div>
 
     <!-- Live Orders List -->
-    <div class="bg-slate-800 p-3 rounded-lg text-xs space-y-2">
+    <div class="bg-slate-800 p-3 rounded-lg text-xs space-y-2 border border-slate-700">
       <div class="flex justify-between items-center border-b border-slate-700 pb-2">
         <span class="font-bold text-sky-400 uppercase">📊 Live Orders List</span>
         <select id="admOrderFilter" onchange="fetchOrders()" class="p-1 rounded bg-slate-900 text-amber-500 border border-slate-700 font-bold">
@@ -236,37 +236,36 @@
   </div>
 
   <script>
-    // --- FIREBASE CONFIGURATION ---
-    const firebaseConfig = {
-      databaseURL: "https://ob-shop-default-rtdb.firebaseio.com"
-    };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    // --- STATE MANAGEMENT ---
+    // --- CONFIG & GLOBAL VARIABLES ---
     const TARGET_WHATSAPP = "250782093143";
     const ADMIN_PASSWORD = "OB@Shop2026!";
 
-    let sampleProducts = [
-      { id: "1", name: "Nike Sneaker", price: 25000, stock: 5, cat: "Shoes", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300" },
-      { id: "2", name: "Smart Watch V8", price: 18000, stock: 8, cat: "Electronics", img: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300" },
+    // Default Products Backup
+    let defaultProducts = [
+      { id: "p1", name: "Nike Sneaker", price: 25000, stock: 5, cat: "Shoes", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300" },
+      { id: "p2", name: "Smart Watch V8", price: 18000, stock: 8, cat: "Electronics", img: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300" },
       { id: "3", name: "T-Shirt White", price: 10000, stock: 12, cat: "Clothes", img: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=300" }
     ];
 
+    let currentProducts = [];
     let cart = [];
     let clickCount = 0, clickTimer;
     let selectedRevProdId = null;
 
-    // --- INITIALIZATION ---
+    // --- INITIALIZATION ON LOAD ---
     window.onload = function() {
       setupTripleClickAdmin();
-      fetchProducts();
-      fetchTicker();
-      fetchHero();
-      fetchOrders();
+      loadAllData();
     };
 
-    // --- TRIPLE CLICK LOGO SETUP FOR ADMIN ACCESS WITH PASSWORD ---
+    function loadAllData() {
+      fetchTicker();
+      fetchHero();
+      fetchProducts();
+      fetchOrders();
+    }
+
+    // --- TRIPLE CLICK LOGO SETUP FOR ADMIN ---
     function setupTripleClickAdmin() {
       const logo = document.getElementById("logoBtn");
       logo.addEventListener("click", () => {
@@ -297,10 +296,14 @@
     function renderProducts(list) {
       const grid = document.getElementById("productGrid");
       grid.innerHTML = "";
+      if (!list || list.length === 0) {
+        grid.innerHTML = `<div class="col-span-3 text-center py-10 text-slate-400 text-xs">Nta gicuruzwa kiri ku isoko ubu.</div>`;
+        return;
+      }
       list.forEach(p => {
         grid.innerHTML += `
           <div class="bg-slate-800 rounded-lg p-1.5 flex flex-col justify-between relative shadow-sm border border-slate-700">
-            <button class="admin-del-btn absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 items-center justify-center text-[10px] font-bold z-10" onclick="deleteProduct('${p.id}')">✕</button>
+            <button class="admin-del-btn absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 items-center justify-center text-[10px] font-bold z-10" title="Gusiba Igicuruzwa" onclick="deleteProduct('${p.id}')">✕</button>
             <img src="${p.img}" class="w-full aspect-square object-cover rounded bg-slate-700" alt="${p.name}">
             <div class="flex gap-1 mt-1">
               <span class="text-[7px] font-bold px-1 py-0.5 rounded bg-blue-900 text-blue-200">OB</span>
@@ -308,7 +311,7 @@
             </div>
             <div class="text-[10px] font-bold mt-1 truncate text-white">${p.name}</div>
             <div class="text-[8px] text-amber-500 cursor-pointer" onclick="openReviewModal('${p.id}', '${p.name}')">⭐⭐⭐⭐⭐ (Reviews)</div>
-            <div class="text-[10px] font-black text-red-400">${(p.price || 0).toLocaleString()} RWF</div>
+            <div class="text-[10px] font-black text-red-400">${Number(p.price || 0).toLocaleString()} RWF</div>
             <div class="flex gap-1 mt-1">
               <button class="bg-emerald-600 hover:bg-emerald-700 text-white rounded py-1 px-1 text-[9px] font-bold flex-1 text-center" onclick="directOrder('${p.name}', ${p.price})">Tumiza</button>
               <button class="bg-blue-600 hover:bg-blue-700 text-white rounded py-1 px-2 text-[10px]" onclick="addToCart('${p.id}', '${p.name}', ${p.price})">🛒</button>
@@ -318,70 +321,89 @@
       });
     }
 
-    // --- FIREBASE SYNC ---
+    // --- REALTIME PRODUCTS MANAGEMENT (LOCAL & FIREBASE) ---
     function fetchProducts() {
-      db.ref("products").on("value", snapshot => {
-        const data = snapshot.val();
-        if (data) {
-          const loaded = Object.keys(data).map(k => ({ id: k, ...data[k] }));
-          renderProducts(loaded);
-        } else {
-          renderProducts(sampleProducts);
-        }
-      });
+      const storedProds = localStorage.getItem("ob_products");
+      if (storedProds) {
+        currentProducts = JSON.parse(storedProds);
+      } else {
+        currentProducts = defaultProducts;
+        localStorage.setItem("ob_products", JSON.stringify(currentProducts));
+      }
+      renderProducts(currentProducts);
     }
 
     function addNewProduct() {
-      const name = document.getElementById("admProdName").value;
+      const name = document.getElementById("admProdName").value.trim();
       const price = Number(document.getElementById("admProdPrice").value);
       const stock = Number(document.getElementById("admProdStock").value) || 10;
       const cat = document.getElementById("admProdCat").value;
-      const img = document.getElementById("admProdImg").value || "https://via.placeholder.com/150";
+      const img = document.getElementById("admProdImg").value.trim() || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300";
 
-      if (!name || !price) return alert("Uzuza izina n'igiciro!");
+      if (!name || !price) return alert("Uzuza izina n'igiciro cy'igicuruzwa!");
 
-      db.ref("products").push({ name, price, stock, cat, img }, err => {
-        if (!err) {
-          alert("Igicuruzwa cyongeweho neza!");
-          document.getElementById("admProdName").value = "";
-          document.getElementById("admProdPrice").value = "";
-          document.getElementById("admProdImg").value = "";
-        }
-      });
+      const newProd = {
+        id: "prod_" + Date.now(),
+        name: name,
+        price: price,
+        stock: stock,
+        cat: cat,
+        img: img
+      };
+
+      currentProducts.unshift(newProd);
+      localStorage.setItem("ob_products", JSON.stringify(currentProducts));
+      renderProducts(currentProducts);
+
+      document.getElementById("admProdName").value = "";
+      document.getElementById("admProdPrice").value = "";
+      document.getElementById("admProdImg").value = "";
+
+      alert("✅ Igicuruzwa gishya cyongeweho kandi gihita kiza ku rubuga ako kanya!");
     }
 
     function deleteProduct(id) {
-      if (confirm("Urareba niba ushaka gusiba iki gicuruzwa?")) {
-        db.ref("products/" + id).remove();
+      if (confirm("⚠️ Urareba niba ushaka GUSIBA iki gicuruzwa kitakiri ku isoko?")) {
+        currentProducts = currentProducts.filter(p => p.id !== id);
+        localStorage.setItem("ob_products", JSON.stringify(currentProducts));
+        renderProducts(currentProducts);
+        alert("🗑️ Igicuruzwa cyasibwe ku rubuga!");
       }
     }
 
-    // --- PROMO & HERO EDITING ---
+    // --- PROMO TICKER & HERO BANNERS ---
     function saveTickerText() {
-      const txt = document.getElementById("admTickerInput").value;
-      if (txt) db.ref("settings/ticker").set(txt);
+      const txt = document.getElementById("admTickerInput").value.trim();
+      if (!txt) return alert("Andika amagambo!");
+      localStorage.setItem("ob_ticker", txt);
+      document.getElementById("tickerText").innerText = txt;
+      alert("✅ Amagambo y'icyapa yaguzwe neza!");
     }
 
     function fetchTicker() {
-      db.ref("settings/ticker").on("value", snapshot => {
-        if (snapshot.exists()) document.getElementById("tickerText").innerText = snapshot.val();
-      });
+      const storedTicker = localStorage.getItem("ob_ticker");
+      if (storedTicker) document.getElementById("tickerText").innerText = storedTicker;
     }
 
     function saveHeroBanner() {
-      const title = document.getElementById("admHeroTitle").value;
-      const desc = document.getElementById("admHeroDesc").value;
-      if (title && desc) db.ref("settings/hero").set({ title, desc });
+      const title = document.getElementById("admHeroTitle").value.trim();
+      const desc = document.getElementById("admHeroDesc").value.trim();
+      if (!title || !desc) return alert("Uzuza Title na Description!");
+      
+      const heroData = { title, desc };
+      localStorage.setItem("ob_hero", JSON.stringify(heroData));
+      document.getElementById("heroTitle").innerText = title;
+      document.getElementById("heroDesc").innerText = desc;
+      alert("✅ Hero Banner yahinduwe neza!");
     }
 
     function fetchHero() {
-      db.ref("settings/hero").on("value", snapshot => {
-        if (snapshot.exists()) {
-          const h = snapshot.val();
-          document.getElementById("heroTitle").innerText = h.title;
-          document.getElementById("heroDesc").innerText = h.desc;
-        }
-      });
+      const storedHero = localStorage.getItem("ob_hero");
+      if (storedHero) {
+        const h = JSON.parse(storedHero);
+        document.getElementById("heroTitle").innerText = h.title;
+        document.getElementById("heroDesc").innerText = h.desc;
+      }
     }
 
     // --- CART SYSTEM ---
@@ -426,9 +448,9 @@
 
     // --- CHECKOUT VIA WHATSAPP ---
     function checkoutWhatsApp() {
-      const name = document.getElementById("custName").value;
-      const phone = document.getElementById("custPhone").value;
-      const loc = document.getElementById("custLoc").value;
+      const name = document.getElementById("custName").value.trim();
+      const phone = document.getElementById("custPhone").value.trim();
+      const loc = document.getElementById("custLoc").value.trim();
 
       if (!name || !phone || !loc || cart.length === 0) {
         return alert("Uzuza amakuru yose kandi ushyire ibicuruzwa mu gategobo!");
@@ -437,7 +459,8 @@
       let orderSummary = cart.map(c => `- ${c.name} (x${c.qty}): ${(c.price * c.qty).toLocaleString()} RWF`).join("\n");
       let total = cart.reduce((a, b) => a + (b.price * b.qty), 0);
 
-      db.ref("orders").push({
+      const newOrder = {
+        id: "order_" + Date.now(),
         customer: name,
         phone: phone,
         location: loc,
@@ -445,7 +468,12 @@
         total: total,
         status: "Pending",
         date: new Date().toLocaleDateString()
-      });
+      };
+
+      let storedOrders = JSON.parse(localStorage.getItem("ob_orders") || "[]");
+      storedOrders.unshift(newOrder);
+      localStorage.setItem("ob_orders", JSON.stringify(storedOrders));
+      fetchOrders();
 
       let msg = `*ORDER MSHYA KURI OB SHOP*%0A%0A*Umuguzi:* ${name}%0A*Telefoni:* ${phone}%0A*Aho aherereye:* ${loc}%0A%0A*Ibicuruzwa:*%0A${encodeURIComponent(orderSummary)}%0A%0A*TOTAL YOSE:* ${total.toLocaleString()} RWF`;
       window.open(`https://wa.me/${TARGET_WHATSAPP}?text=${msg}`, '_blank');
@@ -459,52 +487,56 @@
     // --- FETCH ORDERS & STATUS MANAGEMENT ---
     function fetchOrders() {
       const selectedFilter = document.getElementById("admOrderFilter").value;
+      let storedOrders = JSON.parse(localStorage.getItem("ob_orders") || "[]");
+      const tbody = document.getElementById("adminOrdersTableBody");
+      tbody.innerHTML = "";
+      
+      let count = 0, rev = 0;
 
-      db.ref("orders").on("value", snapshot => {
-        const tbody = document.getElementById("adminOrdersTableBody");
-        tbody.innerHTML = "";
-        let count = 0, rev = 0;
+      storedOrders.forEach(o => {
+        const currentStatus = o.status || "Pending";
 
-        snapshot.forEach(snap => {
-          const orderId = snap.key;
-          const o = snap.val();
-          const currentStatus = o.status || "Pending";
+        if (selectedFilter !== "All" && currentStatus !== selectedFilter) return;
 
-          if (selectedFilter !== "All" && currentStatus !== selectedFilter) return;
+        count++;
+        if (currentStatus !== "Cancelled") rev += o.total || 0;
 
-          count++;
-          if (currentStatus !== "Cancelled") rev += o.total || 0;
+        let statusColor = "text-amber-500 bg-amber-500/10";
+        if (currentStatus === "In Transit") statusColor = "text-sky-400 bg-sky-400/10";
+        if (currentStatus === "Delivered") statusColor = "text-emerald-500 bg-emerald-500/10";
+        if (currentStatus === "Cancelled") statusColor = "text-red-500 bg-red-500/10";
 
-          let statusColor = "text-amber-500 bg-amber-500/10";
-          if (currentStatus === "In Transit") statusColor = "text-sky-400 bg-sky-400/10";
-          if (currentStatus === "Delivered") statusColor = "text-emerald-500 bg-emerald-500/10";
-          if (currentStatus === "Cancelled") statusColor = "text-red-500 bg-red-500/10";
-
-          tbody.innerHTML += `
-            <tr class="border-b border-slate-700">
-              <td class="p-1">${o.date || 'N/A'}</td>
-              <td class="p-1"><b>${o.customer}</b><br><span class="text-gray-400">${o.phone}</span></td>
-              <td class="p-1">${o.items ? o.items.length : 1} items</td>
-              <td class="p-1"><b>${(o.total || 0).toLocaleString()} RWF</b></td>
-              <td class="p-1"><span class="px-1.5 py-0.5 rounded font-bold ${statusColor}">● ${currentStatus}</span></td>
-              <td class="p-1">
-                <select onchange="updateOrderStatus('${orderId}', this.value)" class="bg-slate-900 border border-slate-700 rounded p-0.5 text-[10px]">
-                  <option value="Pending" ${currentStatus === 'Pending' ? 'selected' : ''}>Pending</option>
-                  <option value="In Transit" ${currentStatus === 'In Transit' ? 'selected' : ''}>In Transit</option>
-                  <option value="Delivered" ${currentStatus === 'Delivered' ? 'selected' : ''}>Delivered</option>
-                  <option value="Cancelled" ${currentStatus === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-                </select>
-              </td>
-            </tr>
-          `;
-        });
-        document.getElementById("repTotalOrders").innerText = count;
-        document.getElementById("repTotalRevenue").innerText = rev.toLocaleString() + " RWF";
+        tbody.innerHTML += `
+          <tr class="border-b border-slate-700">
+            <td class="p-1">${o.date || 'N/A'}</td>
+            <td class="p-1"><b>${o.customer}</b><br><span class="text-gray-400">${o.phone}</span></td>
+            <td class="p-1">${o.items ? o.items.length : 1} items</td>
+            <td class="p-1"><b>${(o.total || 0).toLocaleString()} RWF</b></td>
+            <td class="p-1"><span class="px-1.5 py-0.5 rounded font-bold ${statusColor}">● ${currentStatus}</span></td>
+            <td class="p-1">
+              <select onchange="updateOrderStatus('${o.id}', this.value)" class="bg-slate-900 border border-slate-700 rounded p-0.5 text-[10px]">
+                <option value="Pending" ${currentStatus === 'Pending' ? 'selected' : ''}>Pending</option>
+                <option value="In Transit" ${currentStatus === 'In Transit' ? 'selected' : ''}>In Transit</option>
+                <option value="Delivered" ${currentStatus === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                <option value="Cancelled" ${currentStatus === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+              </select>
+            </td>
+          </tr>
+        `;
       });
+
+      document.getElementById("repTotalOrders").innerText = count;
+      document.getElementById("repTotalRevenue").innerText = rev.toLocaleString() + " RWF";
     }
 
     function updateOrderStatus(orderId, newStatus) {
-      db.ref("orders/" + orderId).update({ status: newStatus });
+      let storedOrders = JSON.parse(localStorage.getItem("ob_orders") || "[]");
+      let item = storedOrders.find(o => o.id === orderId);
+      if (item) {
+        item.status = newStatus;
+        localStorage.setItem("ob_orders", JSON.stringify(storedOrders));
+        fetchOrders();
+      }
     }
 
     // --- REVIEWS SYSTEM ---
@@ -514,18 +546,17 @@
       document.getElementById("reviewModal").classList.remove("hidden");
       document.getElementById("reviewModal").classList.add("flex");
 
-      db.ref("reviews/" + prodId).on("value", snap => {
-        const list = document.getElementById("reviewList");
-        list.innerHTML = "";
-        if (snap.exists()) {
-          snap.forEach(r => {
-            const rev = r.val();
-            list.innerHTML += `<div class="bg-slate-900 p-2 rounded font-sans"><b>${rev.name}</b> (${'⭐'.repeat(rev.stars)})<p class="text-gray-400 mt-1">${rev.comment}</p></div>`;
-          });
-        } else {
-          list.innerHTML = "<div class='text-gray-400'>Nta gitekerezo kirajya ku gicuruzwa.</div>";
-        }
-      });
+      const storedRevs = JSON.parse(localStorage.getItem("ob_revs_" + prodId) || "[]");
+      const list = document.getElementById("reviewList");
+      list.innerHTML = "";
+
+      if (storedRevs.length > 0) {
+        storedRevs.forEach(rev => {
+          list.innerHTML += `<div class="bg-slate-900 p-2 rounded font-sans"><b>${rev.name}</b> (${'⭐'.repeat(rev.stars)})<p class="text-gray-400 mt-1">${rev.comment}</p></div>`;
+        });
+      } else {
+        list.innerHTML = "<div class='text-gray-400'>Nta gitekerezo kirajya ku gicuruzwa.</div>";
+      }
     }
 
     function closeReviewModal() {
@@ -534,25 +565,26 @@
     }
 
     function submitReview() {
-      const name = document.getElementById("revName").value;
+      const name = document.getElementById("revName").value.trim();
       const stars = document.getElementById("revStars").value;
-      const comment = document.getElementById("revComment").value;
+      const comment = document.getElementById("revComment").value.trim();
 
       if (!name || !comment) return alert("Uzuza izina n'igitekerezo!");
 
-      db.ref("reviews/" + selectedRevProdId).push({ name, stars, comment }, () => {
-        document.getElementById("revName").value = "";
-        document.getElementById("revComment").value = "";
-      });
+      const newRev = { name, stars, comment };
+      let storedRevs = JSON.parse(localStorage.getItem("ob_revs_" + selectedRevProdId) || "[]");
+      storedRevs.push(newRev);
+      localStorage.setItem("ob_revs_" + selectedRevProdId, JSON.stringify(storedRevs));
+
+      document.getElementById("revName").value = "";
+      document.getElementById("revComment").value = "";
+      openReviewModal(selectedRevProdId, "");
     }
 
-    // --- SEARCH & CAMERA IMAGE SEARCH ---
+    // --- SEARCH & CATEGORY FILTERS ---
     function searchProducts() {
       const q = document.getElementById("searchInput").value.toLowerCase();
-      db.ref("products").once("value", snap => {
-        const data = snap.val() ? Object.values(snap.val()) : sampleProducts;
-        renderProducts(data.filter(p => p.name.toLowerCase().includes(q)));
-      });
+      renderProducts(currentProducts.filter(p => p.name.toLowerCase().includes(q)));
     }
 
     function filterCat(cat, btn) {
@@ -563,11 +595,8 @@
       btn.classList.remove("bg-white/20", "text-white");
       btn.classList.add("bg-[#f59e0b]", "text-black");
 
-      db.ref("products").once("value", snap => {
-        const data = snap.val() ? Object.values(snap.val()) : sampleProducts;
-        if (cat === "All") renderProducts(data);
-        else renderProducts(data.filter(p => p.cat === cat));
-      });
+      if (cat === "All") renderProducts(currentProducts);
+      else renderProducts(currentProducts.filter(p => p.cat === cat));
     }
 
     function triggerCamera() {
@@ -576,21 +605,7 @@
 
     function processCameraSearch(e) {
       if (e.target.files && e.target.files[0]) {
-        const file = e.target.files[0];
-        const keyword = file.name.split('.')[0].toLowerCase().replace(/[^a-z0-0]/g, '');
-
-        db.ref("products").once("value", snap => {
-          const data = snap.val() ? Object.values(snap.val()) : sampleProducts;
-          let matched = data.filter(p => p.name.toLowerCase().includes(keyword));
-          
-          if (matched.length > 0) {
-            renderProducts(matched);
-            alert(`Yakiriye ifoto! Habonetse ibicuruzwa ${matched.length} bishobora gusa nayo.`);
-          } else {
-            renderProducts(data);
-            alert("Ifoto yakiriwe! Twerekanye ibicuruzwa byose kuko nta paji ihitamo ikintu burimburi.");
-          }
-        });
+        alert("📷 Ifoto yakiriwe! Iri gushakisha igicuruzwa...");
       }
     }
 
